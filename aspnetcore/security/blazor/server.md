@@ -2,10 +2,10 @@
 title: Secure ASP.NET Core Blazor Server apps
 author: guardrex
 description: Learn how to mitigate security threats to Blazor Server apps.
-monikerRange: '>= aspnetcore-3.0'
+monikerRange: '>= aspnetcore-3.1'
 ms.author: riande
 ms.custom: mvc
-ms.date: 12/05/2019
+ms.date: 04/02/2020
 no-loc: [Blazor, SignalR]
 uid: security/blazor/server
 ---
@@ -15,7 +15,7 @@ By [Javier Calvarro Nelson](https://github.com/javiercn)
 
 Blazor Server apps adopt a *stateful* data processing model, where the server and client maintain a long-lived relationship. The persistent state is maintained by a [circuit](xref:blazor/state-management), which can span connections that are also potentially long-lived.
 
-When a user visits a Blazor Server site, the server creates a circuit in the server's memory. The circuit indicates to the browser what content to render and responds to events, such as when the user selects a button in the UI. To perform these actions, a circuit invokes JavaScript functions in the user's browser and .NET methods on the server. This two-way JavaScript-based interaction is referred to as [JavaScript interop (JS interop)](xref:blazor/javascript-interop).
+When a user visits a Blazor Server site, the server creates a circuit in the server's memory. The circuit indicates to the browser what content to render and responds to events, such as when the user selects a button in the UI. To perform these actions, a circuit invokes JavaScript functions in the user's browser and .NET methods on the server. This two-way JavaScript-based interaction is referred to as [JavaScript interop (JS interop)](xref:blazor/call-javascript-from-dotnet).
 
 Because JS interop occurs over the Internet and the client uses a remote browser, Blazor Server apps share most web app security concerns. This topic describes common threats to Blazor Server apps and provides threat mitigation guidance focused on Internet-facing apps.
 
@@ -23,6 +23,205 @@ In constrained environments, such as inside corporate networks or intranets, som
 
 * Doesn't apply in the constrained environment.
 * Isn't worth the cost to implement because the security risk is low in a constrained environment.
+
+## Blazor Server project template
+
+The Blazor Server project template can be configured for authentication when the project is created.
+
+# [Visual Studio](#tab/visual-studio)
+
+Follow the Visual Studio guidance in the <xref:blazor/get-started> article to create a new Blazor Server project with an authentication mechanism.
+
+After choosing the **Blazor Server App** template in the **Create a new ASP.NET Core Web Application** dialog, select **Change** under **Authentication**.
+
+A dialog opens to offer the same set of authentication mechanisms available for other ASP.NET Core projects:
+
+* **No Authentication**
+* **Individual User Accounts** &ndash; User accounts can be stored:
+  * Within the app using ASP.NET Core's [Identity](xref:security/authentication/identity) system.
+  * With [Azure AD B2C](xref:security/authentication/azure-ad-b2c).
+* **Work or School Accounts**
+* **Windows Authentication**
+
+# [Visual Studio Code](#tab/visual-studio-code)
+
+Follow the Visual Studio Code guidance in the <xref:blazor/get-started> article to create a new Blazor Server project with an authentication mechanism:
+
+```dotnetcli
+dotnet new blazorserver -o {APP NAME} -au {AUTHENTICATION}
+```
+
+Permissible authentication values (`{AUTHENTICATION}`) are shown in the following table.
+
+| Authentication mechanism                                                                 | `{AUTHENTICATION}` value |
+| ---------------------------------------------------------------------------------------- | :----------------------: |
+| No Authentication                                                                        | `None`                   |
+| Individual<br>Users stored in the app with ASP.NET Core Identity.                        | `Individual`             |
+| Individual<br>Users stored in [Azure AD B2C](xref:security/authentication/azure-ad-b2c). | `IndividualB2C`          |
+| Work or School Accounts<br>Organizational authentication for a single tenant.            | `SingleOrg`              |
+| Work or School Accounts<br>Organizational authentication for multiple tenants.           | `MultiOrg`               |
+| Windows Authentication                                                                   | `Windows`                |
+
+The command creates a folder named with the value provided for the `{APP NAME}` placeholder and uses the folder name as the app's name. For more information, see the [dotnet new](/dotnet/core/tools/dotnet-new) command in the .NET Core Guide.
+
+# [Visual Studio for Mac](#tab/visual-studio-mac)
+
+1. Follow the Visual Studio for Mac guidance in the <xref:blazor/get-started> article.
+
+1. On the **Configure your new Blazor Server App** step, select **Individual Authentication (in-app)** from the **Authentication** drop down.
+
+1. The app is created for individual users stored in the app with ASP.NET Core Identity.
+
+# [.NET Core CLI](#tab/netcore-cli/)
+
+Follow the .NET Core CLI guidance in the <xref:blazor/get-started> article to create a new Blazor Server project with an authentication mechanism:
+
+```dotnetcli
+dotnet new blazorserver -o {APP NAME} -au {AUTHENTICATION}
+```
+
+Permissible authentication values (`{AUTHENTICATION}`) are shown in the following table.
+
+| Authentication mechanism                                                                 | `{AUTHENTICATION}` value |
+| ---------------------------------------------------------------------------------------- | :----------------------: |
+| No Authentication                                                                        | `None`                   |
+| Individual<br>Users stored in the app with ASP.NET Core Identity.                        | `Individual`             |
+| Individual<br>Users stored in [Azure AD B2C](xref:security/authentication/azure-ad-b2c). | `IndividualB2C`          |
+| Work or School Accounts<br>Organizational authentication for a single tenant.            | `SingleOrg`              |
+| Work or School Accounts<br>Organizational authentication for multiple tenants.           | `MultiOrg`               |
+| Windows Authentication                                                                   | `Windows`                |
+
+The command creates a folder named with the value provided for the `{APP NAME}` placeholder and uses the folder name as the app's name. For more information, see the [dotnet new](/dotnet/core/tools/dotnet-new) command in the .NET Core Guide.
+
+---
+
+## Pass tokens to a Blazor Server app
+
+Authenticate the Blazor Server app as you would with a regular Razor Pages or MVC app. Provision and save the tokens to the authentication cookie. For example:
+
+```csharp
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+
+...
+
+services.Configure<OpenIdConnectOptions>(AzureADDefaults.OpenIdScheme, options =>
+{
+    options.ResponseType = "code";
+    options.SaveTokens = true;
+
+    options.Scope.Add("offline_access");
+    options.Scope.Add("{SCOPE}");
+    options.Resource = "{RESOURCE}";
+});
+```
+
+For sample code, including a complete `Startup.ConfigureServices` example, see the [Passing tokens to a server-side Blazor application](https://github.com/javiercn/blazor-server-aad-sample).
+
+Define a class to pass in the initial app state with the access and refresh tokens:
+
+```csharp
+public class InitialApplicationState
+{
+    public string AccessToken { get; set; }
+    public string RefreshToken { get; set; }
+}
+```
+
+Define a **scoped** token provider service that can be used within the Blazor app to resolve the tokens from DI:
+
+```csharp
+using System;
+using System.Security.Claims;
+using System.Threading.Tasks;
+
+public class TokenProvider
+{
+    public string AccessToken { get; set; }
+    public string RefreshToken { get; set; }
+}
+```
+
+In `Startup.ConfigureServices`, add services for:
+
+* `IHttpClientFactory`
+* `TokenProvider`
+
+```csharp
+services.AddHttpClient();
+services.AddScoped<TokenProvider>();
+```
+
+In the *_Host.cshtml* file, create and instance of `InitialApplicationState` and pass it as a parameter to the app:
+
+```cshtml
+@using Microsoft.AspNetCore.Authentication
+
+...
+
+@{
+    var tokens = new InitialApplicationState
+    {
+        AccessToken = await HttpContext.GetTokenAsync("access_token"),
+        RefreshToken = await HttpContext.GetTokenAsync("refresh_token")
+    };
+}
+
+<app>
+    <component type="typeof(App)" param-InitialState="tokens" 
+        render-mode="ServerPrerendered" />
+</app>
+```
+
+In the `App` component (*App.razor*), resolve the service and initialize it with the data from the parameter:
+
+```razor
+@inject TokenProvider TokensProvider
+
+...
+
+@code {
+    [Parameter]
+    public InitialApplicationState InitialState { get; set; }
+
+    protected override Task OnInitializedAsync()
+    {
+        TokensProvider.AccessToken = InitialState.AccessToken;
+        TokensProvider.RefreshToken = InitialState.RefreshToken;
+
+        return base.OnInitializedAsync();
+    }
+}
+```
+
+In the service that makes a secure API request, inject the token provider and retrieve the token to call the API:
+
+```csharp
+public class WeatherForecastService
+{
+    private readonly TokenProvider _store;
+
+    public WeatherForecastService(IHttpClientFactory clientFactory, 
+        TokenProvider tokenProvider)
+    {
+        Client = clientFactory.CreateClient();
+        _store = tokenProvider;
+    }
+
+    public HttpClient Client { get; }
+
+    public async Task<WeatherForecast[]> GetForecastAsync(DateTime startDate)
+    {
+        var token = _store.AccessToken;
+        var request = new HttpRequestMessage(HttpMethod.Get, 
+            "https://localhost:5003/WeatherForecast");
+        request.Headers.Add("Authorization", $"Bearer {token}");
+        var response = await Client.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadAsAsync<WeatherForecast[]>();
+    }
+}
+```
 
 ## Resource exhaustion
 
@@ -110,7 +309,7 @@ A client interacts with the server through JS interop event dispatching and rend
 For calls from .NET methods to JavaScript:
 
 * All invocations have a configurable timeout after which they fail, returning a <xref:System.OperationCanceledException> to the caller.
-  * There's a default timeout for the calls (`CircuitOptions.JSInteropDefaultCallTimeout`) of one minute. To configure this limit, see <xref:blazor/javascript-interop#harden-js-interop-calls>.
+  * There's a default timeout for the calls (`CircuitOptions.JSInteropDefaultCallTimeout`) of one minute. To configure this limit, see <xref:blazor/call-javascript-from-dotnet#harden-js-interop-calls>.
   * A cancellation token can be provided to control the cancellation on a per-call basis. Rely on the default call timeout where possible and time-bound any call to the client if a cancellation token is provided.
 * The result of a JavaScript call can't be trusted. The Blazor app client running in the browser searches for the JavaScript function to invoke. The function is invoked, and either the result or an error is produced. A malicious client can attempt to:
   * Cause an issue in the app by returning an error from the JavaScript function.
@@ -198,7 +397,7 @@ By adding the `if (count < 3) { ... }` check inside the handler, the decision to
 
 ### Guard against multiple dispatches
 
-If an event callback invokes a long running operation, such as fetching data from an external service or database, consider using a guard. The guard can prevent the user from queueing up multiple operations while the operation is in progress with visual feedback. The following component code sets `isLoading` to `true` while `GetForecastAsync` obtains data from the server. While `isLoading` is `true`, the button is disabled in the UI:
+If an event callback invokes a long running operation asynchronously, such as fetching data from an external service or database, consider using a guard. The guard can prevent the user from queueing up multiple operations while the operation is in progress with visual feedback. The following component code sets `isLoading` to `true` while `GetForecastAsync` obtains data from the server. While `isLoading` is `true`, the button is disabled in the UI:
 
 ```razor
 @page "/fetchdata"
@@ -222,6 +421,8 @@ If an event callback invokes a long running operation, such as fetching data fro
     }
 }
 ```
+
+The guard pattern demonstrated in the preceding example works if the background operation is executed asynchronously with the `async`-`await` pattern.
 
 ### Cancel early and avoid use-after-dispose
 
@@ -253,7 +454,7 @@ In addition to using a guard as described in the [Guard against multiple dispatc
 
     public void Dispose()
     {
-        CancellationTokenSource.Cancel();
+        TokenSource.Cancel();
     }
 }
 ```

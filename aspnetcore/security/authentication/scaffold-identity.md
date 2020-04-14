@@ -5,7 +5,7 @@ description: Learn how to scaffold Identity in an ASP.NET Core project.
 monikerRange: '>= aspnetcore-2.1'
 ms.author: riande
 ms.custom: mvc
-ms.date: 10/24/2018
+ms.date: 01/15/2020
 uid: security/authentication/scaffold-identity
 ---
 # Scaffold Identity in ASP.NET Core projects
@@ -24,7 +24,7 @@ We recommend using a source control system that shows file differences and allow
 
 Services are required when using [Two Factor Authentication](xref:security/authentication/identity-enable-qrcodes), [Account confirmation and password recovery](xref:security/authentication/accconfirm), and other security features with Identity. Services or service stubs aren't generated when scaffolding Identity. Services to enable these features must be added manually. For example, see [Require Email Confirmation](xref:security/authentication/accconfirm#require-email-confirmation).
 
-This document contains more complete instructions than the *ScaffoldingReadme.txt* file which is generated when running the the scaffolder.
+This document contains more complete instructions than the *ScaffoldingReadme.txt* file which is generated when running the scaffolder.
 
 ## Scaffold identity into an empty project
 
@@ -250,6 +250,10 @@ The following code outlines adding a user:
 [!code-csharp[](scaffold-identity/consoleAddUser/Data/SeedData.cs?name=snippet)]
 
 A similar approach can be followed for production scenarios.
+
+## Prevent publish of static Identity assets
+
+To prevent publishing static Identity assets to the web root, see <xref:security/authentication/identity#prevent-publish-of-static-identity-assets>.
 
 ## Additional resources
 

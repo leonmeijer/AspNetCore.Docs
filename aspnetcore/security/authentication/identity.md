@@ -3,7 +3,7 @@ title: Introduction to Identity on ASP.NET Core
 author: rick-anderson
 description: Use Identity with an ASP.NET Core app. Learn how to set password requirements (RequireDigit, RequiredLength, RequiredUniqueChars, and more).
 ms.author: riande
-ms.date: 12/05/2019
+ms.date: 01/15/2020
 uid: security/authentication/identity
 ---
 # Introduction to Identity on ASP.NET Core
@@ -32,7 +32,7 @@ In this topic, you learn how to use Identity to register, log in, and log out a 
 
 [!INCLUDE[](~/includes/IdentityServer4.md)]
 
-[View or download the sample code](https://github.com/aspnet/AspNetCore.Docs/tree/master/aspnetcore/security/authentication/identity/sample) ([how to download)](xref:index#how-to-download-a-sample)).
+[View or download the sample code](https://github.com/dotnet/AspNetCore.Docs/tree/master/aspnetcore/security/authentication/identity/sample) ([how to download)](xref:index#how-to-download-a-sample)).
 
 <a name="adi"></a>
 
@@ -208,9 +208,25 @@ See [Configuration](#pw) for a sample that sets the minimum password requirement
 
 See [AddDefaultIdentity source](https://github.com/dotnet/AspNetCore/blob/release/3.0/src/Identity/UI/src/IdentityServiceCollectionUIExtensions.cs#L47-L63) for more information.
 
+## Prevent publish of static Identity assets
+
+To prevent publishing static Identity assets (stylesheets and JavaScript files for Identity UI) to the web root, add the following `ResolveStaticWebAssetsInputsDependsOn` property and `RemoveIdentityAssets` target to the app's project file:
+
+```xml
+<PropertyGroup>
+  <ResolveStaticWebAssetsInputsDependsOn>RemoveIdentityAssets</ResolveStaticWebAssetsInputsDependsOn>
+</PropertyGroup>
+
+<Target Name="RemoveIdentityAssets">
+  <ItemGroup>
+    <StaticWebAsset Remove="@(StaticWebAsset)" Condition="%(SourceId) == 'Microsoft.AspNetCore.Identity.UI'" />
+  </ItemGroup>
+</Target>
+```
+
 ## Next Steps
 
-* See [this GitHub issue](https://github.com/aspnet/AspNetCore.Docs/issues/5131) for information on configuring Identity using SQLite.
+* See [this GitHub issue](https://github.com/dotnet/AspNetCore.Docs/issues/5131) for information on configuring Identity using SQLite.
 * [Configure Identity](xref:security/authentication/identity-configuration)
 * <xref:security/authorization/secure-data>
 * <xref:security/authentication/add-user-data>
@@ -230,7 +246,7 @@ ASP.NET Core Identity is a membership system that adds login functionality to AS
 
 Identity can be configured using a SQL Server database to store user names, passwords, and profile data. Alternatively, another persistent store can be used, for example, Azure Table Storage.
 
-[View or download the sample code](https://github.com/aspnet/AspNetCore.Docs/tree/master/aspnetcore/security/authentication/identity/sample/src/ASPNETCore-IdentityDemoComplete/) ([how to download)](xref:index#how-to-download-a-sample)).
+[View or download the sample code](https://github.com/dotnet/AspNetCore.Docs/tree/master/aspnetcore/security/authentication/identity/sample/src/ASPNETCore-IdentityDemoComplete/) ([how to download)](xref:index#how-to-download-a-sample)).
 
 In this topic, you learn how to use Identity to register, log in, and log out a user. For more detailed instructions about creating apps that use Identity, see the Next Steps section at the end of this article.
 
@@ -279,7 +295,9 @@ Apply the migrations to initialize the database.
 
 Run the following command in the Package Manager Console (PMC):
 
-```PM> Update-Database```
+```powershell
+Update-Database
+```
 
 # [.NET Core CLI](#tab/netcore-cli)
 
@@ -398,7 +416,7 @@ See [Configuration](#pw) for a sample that sets the minimum password requirement
 
 ## Next Steps
 
-* See [this GitHub issue](https://github.com/aspnet/AspNetCore.Docs/issues/5131) for information on configuring Identity using SQLite.
+* See [this GitHub issue](https://github.com/dotnet/AspNetCore.Docs/issues/5131) for information on configuring Identity using SQLite.
 * [Configure Identity](xref:security/authentication/identity-configuration)
 * <xref:security/authorization/secure-data>
 * <xref:security/authentication/add-user-data>

@@ -5,7 +5,7 @@ description: Build a Blazor app step-by-step.
 monikerRange: '>= aspnetcore-3.0'
 ms.author: riande
 ms.custom: mvc
-ms.date: 12/05/2019
+ms.date: 03/20/2020
 no-loc: [Blazor]
 uid: tutorials/first-blazor-app
 ---
@@ -17,9 +17,9 @@ By [Daniel Roth](https://github.com/danroth27) and [Luke Latham](https://github.
 
 This tutorial shows you how to build and modify a Blazor app.
 
-Follow the guidance in the <xref:blazor/get-started> article to create a Blazor project for this tutorial. Name the project *ToDoList*.
-
 ## Build components
+
+1. Follow the guidance in the <xref:blazor/get-started> article to create a Blazor project for this tutorial. Name the project *ToDoList*.
 
 1. Browse to each of the app's three pages in the *Pages* folder: Home, Counter, and Fetch data. These pages are implemented by the Razor component files *Index.razor*, *Counter.razor*, and *FetchData.razor*.
 
@@ -66,19 +66,19 @@ Include a component in another component using an HTML syntax.
 
 Components can also have parameters. Component parameters are defined using public properties on the component class with the `[Parameter]` attribute. Use attributes to specify arguments for a component in markup.
 
-1. Update the component's `@code` C# code:
+1. Update the component's `@code` C# code as follows:
 
    * Add a public `IncrementAmount` property with the `[Parameter]` attribute.
-   * Change the `IncrementCount` method to use the `IncrementAmount` when increasing the value of `currentCount`.
+   * Change the `IncrementCount` method to use the `IncrementAmount` property when increasing the value of `currentCount`.
 
    *Pages/Counter.razor*:
 
    [!code-razor[](build-your-first-blazor-app/samples_snapshot/3.x/Counter.razor?highlight=13,17)]
 
-<!-- Add back when supported.
-   > [!NOTE]
-   > From Visual Studio, you can quickly add a component parameter by using the `para` snippet. Type `para` and press the `Tab` key twice.
--->
+   <!-- Add back when supported.
+       > [!NOTE]
+       > From Visual Studio, you can quickly add a component parameter by using the `para` snippet. Type `para` and press the `Tab` key twice.
+   -->
 
 1. Specify an `IncrementAmount` parameter in the `Index` component's `<Counter>` element using an attribute. Set the value to increment the counter by ten.
 
@@ -126,14 +126,14 @@ An [`@foreach`](/dotnet/csharp/language-reference/keywords/foreach-in) loop is u
 
 Add a new component to the app that implements a simple todo list.
 
-1. Add an empty file named *Todo.razor* to the app in the *Pages* folder:
+1. Add a new `Todo` Razor component to the app in the *Pages* folder. In Visual Studio, right-click the **Pages** folder and select **Add** > **New Item** > **Razor Component**. Name the component's file *Todo.razor*. In other development environments, add a blank file to the **Pages** folder named *Todo.razor*.
 
 1. Provide the initial markup for the component:
 
    ```razor
    @page "/todo"
 
-   <h1>Todo</h1>
+   <h3>Todo</h3>
    ```
 
 1. Add the `Todo` component to the navigation bar.
@@ -191,10 +191,10 @@ Add a new component to the app that implements a simple todo list.
 
    [!code-razor[](build-your-first-blazor-app/samples_snapshot/3.x/ToDo9.razor?highlight=5-6)]
 
-1. To verify that these values are bound, update the `<h1>` header to show a count of the number of todo items that aren't complete (`IsDone` is `false`).
+1. To verify that these values are bound, update the `<h3>` header to show a count of the number of todo items that aren't complete (`IsDone` is `false`).
 
    ```razor
-   <h1>Todo (@todos.Count(todo => !todo.IsDone))</h1>
+   <h3>Todo (@todos.Count(todo => !todo.IsDone))</h3>
    ```
 
 1. The completed `Todo` component (*Pages/Todo.razor*):
